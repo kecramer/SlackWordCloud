@@ -42,5 +42,3 @@ const getMessages = (channel, ts) => {
 		}
 	});
 };
-
-getMessages('GAA4RPKRC');
