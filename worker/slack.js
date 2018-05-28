@@ -79,17 +79,17 @@ const getChannel = (slackChannelId, cb) => {
 							return;
 						}
 						channelLookupTable[channel.slack_id] = channel;
-						cb(channelLookupTable[slackChannelId]);
+						if(cb) { cb(channelLookupTable[slackChannelId]); }
 					});
 				} else {
 					console.log('Already have details for ' + channelInfo.group.id);
 					channelLookupTable[channel[0].slack_id] = channel[0];
-					cb(channelLookupTable[slackChannelId]);
+					if(cb) { cb(channelLookupTable[slackChannelId]); }
 				}
 			});
 		});
 	} else {
-		cb(channelLookupTable[slackChannelId]);
+		if(cb) { cb(channelLookupTable[slackChannelId]); }
 	}
 };
 
@@ -130,16 +130,16 @@ const getUser = (slackUserId, cb) => {
 						}
 
 						userLookupTable[user.slack_id] = user;
-						cb(userLookupTable[slackUserId]);
+						if(cb) { cb(userLookupTable[slackUserId]); }
 					})
 				} else {
 					userLookupTable[user.slack_id] = user;
-					cb(userLookupTable[slackUserId]);
+					if(cb) { cb(userLookupTable[slackUserId]); }
 				}
 			})
 		});
 	} else {
-		cb(userLookupTable[slackUserId]);
+		if(cb) { cb(userLookupTable[slackUserId]); }
 	}
 };
 
@@ -154,7 +154,7 @@ const getUsers = (slackUserIdArray, cb) => {
 	slackUserIdArray.forEach((slackUserId) => {
 		getUser(slackUserId, () => {
 			if(--counter === 0) {
-				cb();
+				if(cb) { cb(); }
 			}
 		});
 	});
@@ -172,5 +172,5 @@ const getAllChannelMessagesWithDetails = (slackChannelId, cb) => {
 		});
 	});
 
-	cb();
+	if(cb) { cb(); }
 }
