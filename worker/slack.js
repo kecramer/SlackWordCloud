@@ -159,3 +159,18 @@ const getUsers = (slackUserIdArray, cb) => {
 		});
 	});
 }
+
+const getAllChannelMessagesWithDetails = (slackChannelId, cb) => {
+	if(!slackChannelId) {
+		console.log('Must specify a channel!');
+		return;
+	}
+
+	getChannel(slackChannelId, (chan) => {
+		getUsers(chan.member_ids, () => {
+			getMessages(chan.slack_id, chan._id);
+		});
+	});
+
+	cb();
+}
