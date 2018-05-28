@@ -4,6 +4,7 @@ const mongoose = require('mongoose'),
 const ChannelSchema = new Schema({
 	slack_id: String,
 	name: String,
+	member_ids: [String],
 })
 
 const Channel = mongoose.model('Channel', ChannelSchema);
