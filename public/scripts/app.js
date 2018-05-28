@@ -1,16 +1,16 @@
 var word_array = [
-  {text: "Hack", weight: 14, html: 'class="clickable"'},
-  {text: "Inference", weight: 15, html: 'class="clickable"'},
-  {text: "Idiot", weight: 17, html: 'class="clickable"'},
-  {text: "Idiosyncratic", weight: 9, html: 'class="clickable"'},
-  {text: "Toaster", weight: 9, html: 'class="clickable"'},
-  {text: "Couch", weight: 9, html: 'class="clickable"'},
-  {text: "Sit", weight: 7, html: 'class="clickable"'},
-  {text: "Lorem", weight: 15, html: 'class="clickable"'},
-  {text: "Ipsum", weight: 9, html: 'class="clickable"'},
-  {text: "Dolor", weight: 6, html: 'class="clickable"'},
-  {text: "Toon", weight: 9, html: 'class="clickable"'},
-  {text: "Terror", weight: 10, html: 'class="clickable"'},
+  {text: "Hack", weight: 14},
+  {text: "Inference", weight: 15},
+  {text: "Idiot", weight: 17},
+  {text: "Idiosyncratic", weight: 9},
+  {text: "Toaster", weight: 9},
+  {text: "Couch", weight: 9},
+  {text: "Sit", weight: 7},
+  {text: "Lorem", weight: 15},
+  {text: "Ipsum", weight: 9},
+  {text: "Dolor", weight: 6},
+  {text: "Toon", weight: 9},
+  {text: "Terror", weight: 10},
   {text: "Task", weight: 8},
   {text: "Talent", weight: 9},
   {text: "Tea cup", weight: 13},
@@ -25,7 +25,7 @@ var word_array = [
 $(document).ready(function() {
     console.log('app.js loaded!');
 
-    //Once the AJAX get is working, this will be overwritten and can be removed
+    //Once the AJAX get is working, this will be automatically overwritten by initWordCloud and can be removed
     $(function() {
         // When DOM is ready, select the container element and call the jQCloud method, passing the array of words as the first argument.
         $("#wordcloud").jQCloud(word_array);
