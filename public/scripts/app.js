@@ -19,63 +19,78 @@ var word_array = [
   {text: "Heresy", weight: 20},
   {text: "Hantavirus", weight: 10},
   {text: "Amet", weight: 5}
-  // ...as many words as you want
 ];
 
-$(function() {
-// When DOM is ready, select the container element and call the jQCloud method, passing the array of words as the first argument.
-$("#wordcloud").jQCloud(word_array);
-});
-
-// Pull messages with the selected word
 
 $(document).ready(function() {
-  console.log('app.js loaded!');
+    console.log('app.js loaded!');
 
-    function renderMessage(messages) {
-        // HTML Template
-        const htmlToAppend = (`
-            <div>
-                <h4>${message.date}</h4>
-                <h3>${message.user}</h3>
-                <p>${message.text}</p>
-            </div>
-            `);
-        // Append each message
-        $('#results').append(htmlToAppend);
-    }
+    //Once the AJAX get is working, this will be overwritten and can be removed
+    $(function() {
+        // When DOM is ready, select the container element and call the jQCloud method, passing the array of words as the first argument.
+        $("#wordcloud").jQCloud(word_array);
+    });
 
-    function handleSuccess (albums) {
-        // Clear previous results
-        $('#results').html = '';
-        // Add each message
-        messages.forEach(function(album) {
-          renderMessage(album);
-        });
-    };
 
     function handleError(err){
-      console.log('There has been an error: ', err);
+        console.log('There has been an error: ', err);
     }
 
-    $( "span" ).on( "click", function( event ) {
+    function initWordCloud (word_array) {
+        $("#wordcloud").jQCloud(word_array);
+    }
+
+    $.ajax({
         // event.preventDefault();
         method: 'GET',
-        url: '/api/messages?q=',
-        success: function( response ) {
-            console.log('There are ' + response.length 'messages with this word.');
-            $('#results').html();
-        },
-        error: function() {
-            console.log('There was an error getting the relevant messages.');
-        },
-        beforeSend: function () {
-            $('#results').append('Loading');
-        },
-        complete: function () {
-            $('#loading').remove();
-        }
-    });
+        url: '/api/words',
+        success: $(initWordCloud),
+        error: handleError
+    })
+
+    // // Pull messages with the selected word
+
+    // function renderMessage(messages) {
+    //     // HTML Template
+    //     const htmlToAppend = (`
+    //         <div>
+    //             <h4>${message.date}</h4>
+    //             <h3>${message.user}</h3>
+    //             <p>${message.text}</p>
+    //         </div>
+    //         `);
+    //     // Append each message
+    //     $('#results').append(htmlToAppend);
+    // }
+
+    // function renderAllMessages (messages) {
+    //     // Clear previous results
+    //     $('#results').html = '';
+    //     // Add each message
+    //     messages.forEach(function(album) {
+    //       renderMessage(album);
+    //     });
+    // };
+
+
+    // $( "span" ).on( "click", function( event ) {
+    //     $.ajax({
+    //         // event.preventDefault();
+    //         method: 'GET',
+    //         url: '/api/messages?q=' + response.innerText,
+    //         success: function( response ) {
+    //             console.log('There are ' + response.length 'messages with this word.');
+    //             renderAllMessages(response);
+    //         },
+    //         error: handleError,
+    //         beforeSend: function () {
+    //             $('#results').append('Loading');
+    //         },
+    //         complete: function () {
+    //             $('#loading').remove();
+    //         }
+    //     })
+    // });
 
 
 });
