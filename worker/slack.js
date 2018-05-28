@@ -9,7 +9,8 @@ if (token === null) {
 var req = require('request'),
     db = require('../model');
 
-var channelLookupTable = {};
+var channelLookupTable = {},
+    userLookupTable = {};
 
 const getMessages = (slackChannelId, internalChannelId, ts) => {
 	if(!slackChannelId) {
@@ -35,7 +36,8 @@ const getMessages = (slackChannelId, internalChannelId, ts) => {
 			//TODO: Import the remaining fields (channel and user) by referencing the other tables.
 			db.Message.create({text: message.text,
 			                   timestamp: new Date(message.ts * 1000),
-			                   channel: internalChannelId});
+			                   channel: internalChannelId,
+			                   user: userLookupTable[message.user]});
 		});
 
 		//Recurrsively call for more messages if we have not reached the end of the messages.
@@ -71,17 +73,17 @@ const getChannel = (slackChannelId, cb) => {
 				}
 
 				if(channel.length === 0) {
-					db.Channel.create({slack_id: channelInfo.group.id, name: channelInfo.group.name}, (err, channel) => {
+					db.Channel.create({slack_id: channelInfo.group.id, name: channelInfo.group.name, member_ids: channelInfo.group.members}, (err, channel) => {
 						if(err) {
 							console.log(err);
 							return;
 						}
-						channelLookupTable[channel.slack_id] = channel._id;
+						channelLookupTable[channel.slack_id] = channel;
 						cb(channelLookupTable[slackChannelId]);
 					});
 				} else {
 					console.log('Already have details for ' + channelInfo.group.id);
-					channelLookupTable[channel[0].slack_id] = channel[0]._id;
+					channelLookupTable[channel[0].slack_id] = channel[0];
 					cb(channelLookupTable[slackChannelId]);
 				}
 			});
@@ -90,3 +92,70 @@ const getChannel = (slackChannelId, cb) => {
 		cb(channelLookupTable[slackChannelId]);
 	}
 };
+
+const getUser = (slackUserId, cb) => {
+	if(!slackUserId) {
+		console.log('Someone asked to get user details without specifying a user!');
+		return;
+	}
+
+	console.log('Getting user details for ' + slackUserId);
+
+	if(userLookupTable[slackUserId] === undefined) {
+		let connString = `https://slack.com/api/users.info?token=${token}&user=${slackUserId}`;
+
+		req(connString, (err, resp, body) => {
+			if(err) {
+				console.log(err);
+				return;
+			}
+
+			let userInfo = JSON.parse(resp.body);
+			if(!userInfo.user) {
+				console.log('That user was not found or not available to inspect!');
+				return;
+			}
+
+			db.User.find({slack_id: slackUserId}, (err, user) => {
+				if(err) {
+					console.log(err);
+					return;
+				}
+
+				if(user.length === 0) {
+					db.User.create({slack_id: userInfo.user.id, name: userInfo.user.real_name, handle: userInfo.user.name}, (err, user) => {
+						if(err) {
+							console.log(err);
+							return;
+						}
+
+						userLookupTable[user.slack_id] = user;
+						cb(userLookupTable[slackUserId]);
+					})
+				} else {
+					userLookupTable[user.slack_id] = user;
+					cb(userLookupTable[slackUserId]);
+				}
+			})
+		});
+	} else {
+		cb(userLookupTable[slackUserId]);
+	}
+};
+
+const getUsers = (slackUserIdArray, cb) => {
+	if(!slackUserIdArray) {
+		console.log('Someone asked to get users details without specifying a list of users!');
+		return;
+	}
+
+	let counter = slackUserIdArray.length;
+
+	slackUserIdArray.forEach((slackUserId) => {
+		getUser(slackUserId, () => {
+			if(--counter === 0) {
+				cb();
+			}
+		});
+	});
+}
