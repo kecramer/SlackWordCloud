@@ -5,6 +5,10 @@ const express = require('express'),
 const app = express();
 app.use(express.static('public'));
 
+app.get('/', (req, res) => {
+	res.sendFile('view/index.html', {root: __dirname});
+});
+
 app.get('/channel/:id/words', controller.words.show);
 
 app.listen(process.env.PORT || 3000, () => {
