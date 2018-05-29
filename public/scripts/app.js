@@ -22,8 +22,7 @@ var word_array = [
 ];
 
 // set default channel
-let channel = "wdi-sf-45-strictlybiz";
-
+let channel = "GAA4RPKRC";
 
 $(document).ready(function() {
     console.log('app.js loaded!');
@@ -34,30 +33,23 @@ $(document).ready(function() {
         console.log("Selected channel is now " + channel);
     });
 
-    //Once the AJAX get is working, this will be automatically overwritten by initWordCloud and can be removed
-    $(function() {
-        // When DOM is ready, select the container element and call the jQCloud method, passing the array of words as the first argument.
-        $("#wordcloud").jQCloud(word_array);
-    });
-
-
     function handleError(err){
         console.log('There has been an error: ', err);
     }
 
+    // Generate Word Cloud
     function initWordCloud (word_json) {
         let word_array = word_json.words;
         $("#wordcloud").jQCloud(word_array);
     }
 
-    // // Pull wordlist with the selected channel
-    // $.ajax({
-    //     // event.preventDefault();
-    //     method: 'GET',
-    //     url: `/channel/${channel}/wordlist`,
-    //     success: $(initWordCloud),
-    //     error: handleError
-    // })
+    // Pull Word List (from the selected channel)
+    $.ajax({
+        method: 'GET',
+        url: `/channel/${channel}/words?limit=200`,
+        success: initWordCloud,
+        error: handleError
+    })
 
 
 
@@ -81,8 +73,8 @@ $(document).ready(function() {
     //     // Clear previous results
     //     $('#results').html = '';
     //     // Add each message
-    //     messages.forEach(function(album) {
-    //       renderMessage(album);
+    //     messages.forEach(function(message) {
+    //       renderMessage(message);
     //     });
     // };
 
@@ -91,10 +83,11 @@ $(document).ready(function() {
     //     $.ajax({
     //         // event.preventDefault();
     //         method: 'GET',
-    //         url: `/api/channels/${channelId}/messages?q=` + response.innerText,
+    //         url: `/api/channels/${channel}/messages?q=` + response.innerText,
     //         success: function( response ) {
-    //             console.log('There are ' + response.length 'messages with this word.');
-    //             renderAllMessages(response);
+    //             let messages = response.messages
+    //             console.log('There are ' + messages.length 'messages with this word.');
+    //             renderAllMessages(messages);
     //         },
     //         error: handleError,
     //         beforeSend: function () {
