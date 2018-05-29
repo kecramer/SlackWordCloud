@@ -64,30 +64,29 @@ $(document).ready(() => {
     // Pull messages with the selected word
 
     renderMessage = (message) => {
-        // // populate user name
-        //  let user = '';
-        // $.ajax({
-        //   method: 'GET',
-        //   url: `/users?q=` + message.user,
-        //   success: (response) => {
-        //       console.log(response);
-        //       let user = response.user;
-        //       renderAllMessages(messages);
-        //   },
-        //   error: handleError,
-        //   }
-        // })
+        // populate user name
+        let username = '';
+        $.ajax({
+          method: 'GET',
+          url: `/users?q=` + message.user,
+          success: (response) => {
+              username = response[0].name;
+              // HTML Template
+              const htmlToAppend = (`
+                  <div class="result">
+                      <h4>${message.timestamp}</h4>
+                      <h3>${username}</h3>
+                      <p>${message.text}</p>
+                  </div>
+                  `);
+              // Append each message
+              $('#results').append(htmlToAppend);
+          },
+          error: handleError,
+          }
+        );
+        console.log(username);
 
-        // HTML Template
-        const htmlToAppend = (`
-            <div class="result">
-                <h4>${message.timestamp}</h4>
-                <h3>${message.user}</h3>
-                <p>${message.text}</p>
-            </div>
-            `);
-        // Append each message
-        $('#results').append(htmlToAppend);
     }
 
     renderAllMessages = (messages) => {
