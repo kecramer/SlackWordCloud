@@ -161,12 +161,18 @@ const getUsers = (slackUserIdArray, cb) => {
 		return;
 	}
 
+	if(slackUserIdArray.length === 0) {
+		if(cb) { cb([]); }
+	}
+
 	let counter = slackUserIdArray.length;
+	let userData = [];
 
 	slackUserIdArray.forEach((slackUserId) => {
-		getUser(slackUserId, () => {
+		getUser(slackUserId, (user) => {
+			userData.push(user);
 			if(--counter === 0) {
-				if(cb) { cb(); }
+				if(cb) { cb(userData); }
 			}
 		});
 	});
@@ -198,4 +204,5 @@ const getAllChannelMessagesWithDetails = (slackChannelId, cb) => {
 
 module.exports = {
 	getAllChannelMessagesWithDetails,
+	getUsers
 }
