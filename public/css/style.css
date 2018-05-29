@@ -130,15 +130,15 @@ select {
     margin: .5em;
 }
 
-#results {
+div#results {
     min-height: 20vh;
+    width: 60%;
 }
 
-.result {
+div.result {
     background-color: #eee;
     border-radius: 5px;
-    margin: .5em;
-    width: 60%;
+    margin: 1em;
 }
 
 

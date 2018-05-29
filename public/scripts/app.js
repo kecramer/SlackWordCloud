@@ -65,13 +65,13 @@ $(document).ready(() => {
 
     renderMessage = (message) => {
         // // populate user name
+        //  let user = '';
         // $.ajax({
-        //     // event.preventDefault();
         //   method: 'GET',
-        //   url: `/channel/${channel}/messages?q=` + event.target.innerText,
+        //   url: `/users?q=` + message.user,
         //   success: (response) => {
         //       console.log(response);
-        //       let messages = response.messages;
+        //       let user = response.user;
         //       renderAllMessages(messages);
         //   },
         //   error: handleError,
@@ -92,7 +92,7 @@ $(document).ready(() => {
 
     renderAllMessages = (messages) => {
         // Clear previous results
-        $('#results').innerHTML = '';
+        $('#results').html('');
         // Add each message
         messages.forEach((message) => {
           renderMessage(message);
