@@ -18,11 +18,13 @@ const getMessages = (slackChannelId, internalChannelId, ts, cb) => {
 		return;
 	}
 
-	console.log('Getting messages starting at ' + (ts ? ts : 'the beginning'));
+	console.log('Getting messages starting at ' + (ts ? JSON.stringify(ts) : 'the beginning'));
 
 	let connString = `https://slack.com/api/groups.history?token=${token}&channel=${slackChannelId}`;
-	if(ts) {
-		connString += `&latest=${ts}`;
+	if(ts && ts.latest) {
+		connString += `&latest=${ts.latest}`;
+	} else if (ts && ts.oldest) {
+		connString += `&oldest=${ts.oldest}`;
 	}
 
 	req(connString, (err, resp, body) => {
@@ -51,7 +53,7 @@ const getMessages = (slackChannelId, internalChannelId, ts, cb) => {
 		//Recurrsively call for more messages if we have not reached the end of the messages.
 		if(channelHistory.has_more) {
 			//Wait 750ms before hitting the slack API again so we won't get rate limited
-			setTimeout(() => {getMessages(slackChannelId, internalChannelId, channelHistory.messages[channelHistory.messages.length-1].ts, cb)}, 750);
+			setTimeout(() => {getMessages(slackChannelId, internalChannelId, {latest: channelHistory.messages[channelHistory.messages.length-1].ts}, cb)}, 750);
 		} else {
 			if (cb) { cb(); }
 		}
@@ -178,10 +180,21 @@ const getAllChannelMessagesWithDetails = (slackChannelId, cb) => {
 
 	getChannel(slackChannelId, (chan) => {
 		getUsers(chan.member_ids, () => {
-			getMessages(chan.slack_id, chan._id, null, () => {
-				console.log('All done')
-				if(cb) { cb(); }
+			db.Message.find({channel: chan._id}, (err, messages) => {
+				if (messages.length === 0) {
+					getMessages(chan.slack_id, chan._id, null, () => {
+						if(cb) { cb(); }
+					});
+				} else {
+					getMessages(chan.slack_id, chan._id, {oldest: messages[0].timestamp}, () => {
+						if(cb) { cb(); }
+					})
+				}
 			});
 		});
 	});
+}
+
+module.exports = {
+	getAllChannelMessagesWithDetails,
 }
