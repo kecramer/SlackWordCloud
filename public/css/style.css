@@ -108,7 +108,19 @@ h1 {
     font-size: 8em;
 }
 
-div#center {
+h3 {
+    font-size: 2em;
+}
+
+h4 {
+    font-size: 1.75em;
+}
+
+p {
+    font-size: 1.5em;
+}
+
+div.center {
     display: flex;
     justify-content: space-around;
 }
@@ -120,6 +132,13 @@ select {
 
 #results {
     min-height: 20vh;
+}
+
+.result {
+    background-color: #eee;
+    border-radius: 5px;
+    margin: .5em;
+    width: 60%;
 }
 
 

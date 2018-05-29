@@ -7,7 +7,6 @@
  * Licensed under the MIT license.
  *
  * Date: 2013-05-09 18:54:22 +0200
- https://github.com/lucaong/jQCloud
 */
 
 (function( $ ) {
