@@ -180,13 +180,14 @@ const getAllChannelMessagesWithDetails = (slackChannelId, cb) => {
 
 	getChannel(slackChannelId, (chan) => {
 		getUsers(chan.member_ids, () => {
-			db.Message.find({channel: chan._id}, (err, messages) => {
+			db.Message.find({channel: chan._id}, null, {sort: '-timestamp'}, (err, messages) => {
 				if (messages.length === 0) {
 					getMessages(chan.slack_id, chan._id, null, () => {
 						if(cb) { cb(); }
 					});
 				} else {
-					getMessages(chan.slack_id, chan._id, {oldest: messages[0].timestamp}, () => {
+					date = new Date(messages[0].timestamp);
+					getMessages(chan.slack_id, chan._id, {oldest: ((date.getTime() / 1000) + 1)}, () => {
 						if(cb) { cb(); }
 					})
 				}
