@@ -44,6 +44,13 @@ $(document).ready(() => {
         $("#wordcloud").jQCloud(word_array);
     }
 
+    // Pull Word List (from the selected channel)
+    const pullWordList = () => ($.ajax({
+        method: 'GET',
+        url: `/channel/${channel}/words?limit=200`,
+        success: initWordCloud,
+        error: handleError
+    }));
 
     // // Populate list of channels in dropdown
     // renderChannel = (channel) => {
@@ -77,18 +84,12 @@ $(document).ready(() => {
     //     error: handleError,
     // })    
 
-    // Pull Word List (from the selected channel)
-    $.ajax({
-        method: 'GET',
-        url: `/channel/${channel}/words?limit=200`,
-        success: initWordCloud,
-        error: handleError
-    })
-
+    pullWordList();
+    
     // update channel when dropdown selection is made
     $('select').on('change', () => {
         channel = $('select option:selected')[0].value;
-        initWordCloud;
+        pullWordList;
         console.log("Selected channel is now " + channel);
     });
 
