@@ -1,13 +1,4 @@
-var token = process.env.SLACK_TOKEN || null;
-
-if (token === null) {
-	console.log('Must have SLACK_TOKEN defined in your environment.\n' +
-               'Do this by adding `export SLACK_TOKEN=token` in your ~/.profile');
-	process.exit(1);
-}
-
-const reqOut = require('request'),
-      db = require('../model'),
+const db = require('../model'),
       slack = require('../worker/slack.js');
 
 const show = (req, res) => {
