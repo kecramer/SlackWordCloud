@@ -8,6 +8,11 @@ const index = (req, res) => {
    }
 
    db.Message.find({text: regex}, (err, messages) => {
+      if(err) {
+         console.log(err);
+         res.sendStatus(500);
+      }
+      
       res.json({messages});
    });
 };
