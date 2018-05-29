@@ -54,7 +54,7 @@ $(document).ready(function() {
     // $.ajax({
     //     // event.preventDefault();
     //     method: 'GET',
-    //     url: `/api/channels/${channel}/wordlist`,
+    //     url: `/channel/${channel}/wordlist`,
     //     success: $(initWordCloud),
     //     error: handleError
     // })

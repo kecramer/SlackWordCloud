@@ -91,6 +91,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    /*align-items: center;*/
 }
 
 header, footer {
@@ -100,16 +101,26 @@ header, footer {
     justify-content: center;
     align-items: center;
     min-height: 5em;
+    width: 100%;
 }
 
 h1 {
     font-size: 8em;
 }
 
-#results {
-    min-height: 25vh;
+div#center {
+    display: flex;
+    justify-content: space-around;
 }
 
+select {
+    font-size: 2em;
+    margin: .5em;
+}
+
+#results {
+    min-height: 20vh;
+}
 
 
 
