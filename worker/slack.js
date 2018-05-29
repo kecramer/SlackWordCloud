@@ -12,7 +12,7 @@ var req = require('request'),
 var channelLookupTable = {},
     userLookupTable = {};
 
-const getMessages = (slackChannelId, internalChannelId, ts) => {
+const getMessages = (slackChannelId, internalChannelId, ts, cb) => {
 	if(!slackChannelId) {
 		console.log('Someone asked to get messages without specifying a channel!');
 		return;
@@ -33,17 +33,27 @@ const getMessages = (slackChannelId, internalChannelId, ts) => {
 
 		var channelHistory = JSON.parse(resp.body);
 		channelHistory.messages.forEach((message) => {
-			//TODO: Import the remaining fields (channel and user) by referencing the other tables.
+			let user = '';
+			if(message.subtype === 'bot_message') {
+				return;
+			} else if(message.subtype === 'file_comment') {
+				user = message.file.user;
+			} else {
+				user = message.user;
+			}
+
 			db.Message.create({text: message.text,
 			                   timestamp: new Date(message.ts * 1000),
 			                   channel: internalChannelId,
-			                   user: userLookupTable[message.user]});
+			                   user: userLookupTable[user]._id});
 		});
 
 		//Recurrsively call for more messages if we have not reached the end of the messages.
 		if(channelHistory.has_more) {
 			//Wait 750ms before hitting the slack API again so we won't get rate limited
-			setTimeout(() => {getMessages(slackChannelId, internalChannelId, channelHistory.messages[channelHistory.messages.length-1].ts)}, 750);
+			setTimeout(() => {getMessages(slackChannelId, internalChannelId, channelHistory.messages[channelHistory.messages.length-1].ts, cb)}, 750);
+		} else {
+			if (cb) { cb(); }
 		}
 	});
 };
@@ -133,7 +143,7 @@ const getUser = (slackUserId, cb) => {
 						if(cb) { cb(userLookupTable[slackUserId]); }
 					})
 				} else {
-					userLookupTable[user.slack_id] = user;
+					userLookupTable[user[0].slack_id] = user[0];
 					if(cb) { cb(userLookupTable[slackUserId]); }
 				}
 			})
@@ -168,9 +178,10 @@ const getAllChannelMessagesWithDetails = (slackChannelId, cb) => {
 
 	getChannel(slackChannelId, (chan) => {
 		getUsers(chan.member_ids, () => {
-			getMessages(chan.slack_id, chan._id);
+			getMessages(chan.slack_id, chan._id, null, () => {
+				console.log('All done')
+				if(cb) { cb(); }
+			});
 		});
 	});
-
-	if(cb) { cb(); }
 }
