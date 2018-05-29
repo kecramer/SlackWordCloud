@@ -1,50 +1,53 @@
 const db = require('../model'),
-      countWords = require('count-words');
+      countWords = require('count-words'),
+      slackWorker = require('../worker/slack.js');
 
 const show = (req, res) => {
-	db.Channel.find({slack_id: 'GAA4RPKRC'}, (err, channel) => {
-		if(err) {
-			console.log(err);
-			res.sendStatus(500);
-		}
-
-		if(!channel) {
-			console.log('Could not find that channel!');
-			res.sendStatus(404);
-		}
-
-		db.Message.find({channel: channel[0]._id}, (err, messages) => {
+	slackWorker.getAllChannelMessagesWithDetails(req.params.id, () => {
+		db.Channel.find({slack_id: req.params.id}, (err, channel) => {
 			if(err) {
 				console.log(err);
 				res.sendStatus(500);
 			}
 
-			if(messages.length == 0) {
-				console.log('No messages for that conversation');
-				res.sendStatus(418);
+			if(!channel) {
+				console.log('Could not find that channel!');
+				res.sendStatus(404);
 			}
 
-			let hugeString = '';
+			db.Message.find({channel: channel[0]._id}, (err, messages) => {
+				if(err) {
+					console.log(err);
+					res.sendStatus(500);
+				}
 
-			for(let i = 0; i < messages.length; i++) {
-				hugeString += ' ' + messages[i].text;
-			};
+				if(messages.length == 0) {
+					console.log('No messages for that conversation');
+					res.sendStatus(418);
+				}
 
-			hugeString = hugeString.replace(/has [a-z]+ the group/g, '')
-			                       .replace(/uploaded a file/g, '')
-			                       .replace(/\<@[a-zA-Z0-9]+\>/g, '')
-			                       .replace(/:[a-zA-Z0-9\-_]+:/g, '')
-			                       .replace(/\<https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)[\>|]/g, '');
+				let hugeString = '';
 
-			let occurrences = countWords(hugeString, true);
+				for(let i = 0; i < messages.length; i++) {
+					hugeString += ' ' + messages[i].text;
+				};
 
-			let topKeys = Object.keys(occurrences).sort((a,b) => occurrences[b] - occurrences[a]);
+				hugeString = hugeString.replace(/has [a-z]+ the group/g, '')
+				                       .replace(/uploaded a file/g, '')
+				                       .replace(/\<@[a-zA-Z0-9]+\>/g, '')
+				                       .replace(/:[a-zA-Z0-9\-_]+:/g, '')
+				                       .replace(/\<https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)[\>|]/g, '');
 
-			let words = [];
-			for(let i = 0; (i < ((req && req.query && req.query.limit) || 20)) && topKeys[i] !== undefined; i++) {
-				words.push({text: topKeys[i], weight: occurrences[topKeys[i]]});
-			}
-			res.json({words});
+				let occurrences = countWords(hugeString, true);
+
+				let topKeys = Object.keys(occurrences).sort((a,b) => occurrences[b] - occurrences[a]);
+
+				let words = [];
+				for(let i = 0; (i < ((req && req.query && req.query.limit) || 20)) && topKeys[i] !== undefined; i++) {
+					words.push({text: topKeys[i], weight: occurrences[topKeys[i]]});
+				}
+				res.json({words});
+			});
 		});
 	});
 };
