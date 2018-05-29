@@ -21,9 +21,18 @@ var word_array = [
   {text: "Amet", weight: 5}
 ];
 
+// set default channel
+let channel = "wdi-sf-45-strictlybiz";
+
 
 $(document).ready(function() {
     console.log('app.js loaded!');
+
+    // update channel when dropdown selection is made
+    $('select').on('change', function() {
+        channel = $('select option:selected')[0].value;
+        console.log("Selected channel is now " + channel);
+    });
 
     //Once the AJAX get is working, this will be automatically overwritten by initWordCloud and can be removed
     $(function() {
@@ -36,17 +45,22 @@ $(document).ready(function() {
         console.log('There has been an error: ', err);
     }
 
-    function initWordCloud (word_array) {
+    function initWordCloud (word_json) {
+        let word_array = word_json.words;
         $("#wordcloud").jQCloud(word_array);
     }
 
-    $.ajax({
-        // event.preventDefault();
-        method: 'GET',
-        url: '/api/words',
-        success: $(initWordCloud),
-        error: handleError
-    })
+    // // Pull wordlist with the selected channel
+    // $.ajax({
+    //     // event.preventDefault();
+    //     method: 'GET',
+    //     url: `/api/channels/${channel}/wordlist`,
+    //     success: $(initWordCloud),
+    //     error: handleError
+    // })
+
+
+
 
     // // Pull messages with the selected word
 
@@ -77,7 +91,7 @@ $(document).ready(function() {
     //     $.ajax({
     //         // event.preventDefault();
     //         method: 'GET',
-    //         url: '/api/messages?q=' + response.innerText,
+    //         url: `/api/channels/${channelId}/messages?q=` + response.innerText,
     //         success: function( response ) {
     //             console.log('There are ' + response.length 'messages with this word.');
     //             renderAllMessages(response);
