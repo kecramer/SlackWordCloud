@@ -7,13 +7,20 @@ const index = (req, res) => {
       regex = new RegExp(req.query.q, 'i');
    }
 
-   db.Message.find({text: regex}, (err, messages) => {
+   db.Channel.find({slack_id: req.params.id}, (err, channel) => {
       if(err) {
          console.log(err);
          res.sendStatus(500);
       }
-      
-      res.json({messages});
+
+      db.Message.find({$and:[{text: regex},{channel: channel[0]._id}]}, (err, messages) => {
+         if(err) {
+            console.log(err);
+            res.sendStatus(500);
+         }
+
+         res.json({messages});
+      });
    });
 };
 
