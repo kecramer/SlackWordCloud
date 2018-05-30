@@ -85,9 +85,10 @@ $(document).ready(() => {
           success: (response) => {
               let username = response[0].name;
               let messageId = message._id;
+              let idOrDataId = 'id="';
               // HTML Template
               let htmlToAppend = (`
-                  <div id="${messageId}" class="result">
+                  <div ${idOrDataId}${messageId}" class="result">
                       <h4>${message.timestamp}</h4>
                       <h3>${username}</h3>
                       <p>${message.text}</p>
@@ -102,23 +103,26 @@ $(document).ready(() => {
               $('#results .result:last-child').on('click', 'a>h5', (event) => {
                   event.preventDefault();
                   console.log("clicked to save message");
-                  // Add message to saved tab
-                  $('#savedmessages').append(htmlToAppend);
-                  // // POST message to backend
-                  // $.ajax({
-                  //   method: 'POST',
-                  //   url: '/',
-                  //   data: {saved_message:{
+                  event.target.innerText = 'Unsave';
+                  // POST message to backend
+                  $.ajax({
+                    method: 'POST',
+                    url: `/messages/${messageId}`,
+                    data: `{message: ${messageId}}`,
+                    success: function(message) {
+                      console.log("message saved to database");
+                    },
+                    error: handleError
+                  });
 
-                  //   }},
-                  //   success: function(album) {
-                  //     console.log(album);
-                  //     renderAlbum(album);
-                  //   },
-                  //   error: handleError
-                  // });
-                  // // Change "save" link to "unsave"
-                  // $(`#${messageId}`)
+                  // Add message to saved tab
+                  idOrDataId = 'dataId="';
+
+                  $('#savedmessages').append(htmlToAppend);
+                  $('#savedmessages:last-child').on('click', 'a>h5', (event) => {
+                      event.preventDefault();
+                      console.log("clicked to unsave message");
+                  })
               })
           },
           error: handleError
