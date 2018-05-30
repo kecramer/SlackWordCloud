@@ -10,7 +10,7 @@ const reqOut = require('request'),
       db = require('../model');
 
 const index = (req, res) => {
-	let connString = `https://slack.com/api/groups.list?token=${token}`;
+	let connString = `https://slack.com/api/conversations.list?token=${token}`;
 
 	reqOut(connString, (err, resp, body) => {
 		if(err) {
@@ -20,9 +20,9 @@ const index = (req, res) => {
 
 		let jsonBlob = JSON.parse(resp.body);
 		console.log(connString)
-		console.log(JSON.stringify(jsonBlob.groups))
+		console.log(JSON.stringify(jsonBlob.channels))
 
-		jsonBlob.groups.forEach((channel, i) => {
+		jsonBlob.channels.forEach((channel, i) => {
 			db.Channel.find({slack_id: channel.id}, (err, chan) => {
 				if(err) {
 					console.log(err);
@@ -36,12 +36,12 @@ const index = (req, res) => {
 							res.sendStatus(500);
 						}
 
-						if(jsonBlob.groups.length == i + 1) {
+						if(jsonBlob.channels.length == i + 1) {
 							complete(req, res);
 						}
 					});
 				} else {
-					if(jsonBlob.groups.length == i + 1) {
+					if(jsonBlob.channels.length == i + 1) {
 						complete(req, res);
 					}
 				}
