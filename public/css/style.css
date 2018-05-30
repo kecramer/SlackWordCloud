@@ -181,6 +181,6 @@ code {
 	white-space: pre;
 }
 
-.slack-user, .result a {
+.slack-user, .slack-cmd, .slack-channel, strong, .result a {
 	font-size: 1em;
 }
