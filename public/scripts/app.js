@@ -84,9 +84,10 @@ $(document).ready(() => {
           url: `/users?q=` + message.user,
           success: (response) => {
               let username = response[0].name;
+              let messageId = message._id;
               // HTML Template
               let htmlToAppend = (`
-                  <div id="${message._id}" class="result">
+                  <div id="${messageId}" class="result">
                       <h4>${message.timestamp}</h4>
                       <h3>${username}</h3>
                       <p>${message.text}</p>
@@ -98,12 +99,26 @@ $(document).ready(() => {
               $('#results').append(htmlToAppend);
 
               // Add onclick for saving messages
-              // console.log($('#results .result:last-child').html());
               $('#results .result:last-child').on('click', 'a>h5', (event) => {
                   event.preventDefault();
                   console.log("clicked to save message");
-                  // let messageId = event.target.parent().attr('id');
+                  // Add message to saved tab
+                  $('#savedmessages').append(htmlToAppend);
+                  // // POST message to backend
+                  // $.ajax({
+                  //   method: 'POST',
+                  //   url: '/',
+                  //   data: {saved_message:{
 
+                  //   }},
+                  //   success: function(album) {
+                  //     console.log(album);
+                  //     renderAlbum(album);
+                  //   },
+                  //   error: handleError
+                  // });
+                  // // Change "save" link to "unsave"
+                  // $(`#${messageId}`)
               })
           },
           error: handleError
