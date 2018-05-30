@@ -120,6 +120,16 @@ $(document).ready(() => {
         });
     };
 
+   insertionQ('.slack-user').every((el) => {
+      $.ajax({
+         method: 'GET',
+         url: '/users?q=U' + el.innerText,
+         success: (res) => {
+            el.innerText = `@${res[0].handle}`;
+         }
+      });
+   });
+
     // OnClick for each word in word cloud
 
     // let word_elements = $('span');
