@@ -98,7 +98,6 @@ $(document).ready(() => {
           error: handleError,
           }
         );
-
     }
 
     renderAllMessages = (messages) => {
@@ -127,12 +126,21 @@ $(document).ready(() => {
             },
             error: handleError,
         })    
-
     });
 
-
-
-
+    // OnClick for navbar
+    $('nav').on('click', 'a>h3', (event) => {
+        event.preventDefault();
+        let element = event.target;
+        console.log("clicked " + element.innerText);
+        if (element.className === 'savedmessages') {
+          $('main#words').addClass('hidden');
+          $('main#saved').removeClass('hidden');
+        } else {
+          $('main#saved').addClass('hidden');
+          $('main#words').removeClass('hidden');
+        }
+    });
 
 });
 
