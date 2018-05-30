@@ -64,6 +64,9 @@ $(document).ready(() => {
     
     // update channel when dropdown selection is made
     $('select').on('change', () => {
+        // Clear previous results
+        $('#results').html('');
+        // update channel
         channel = $('select option:selected')[0].value;
         $('#wordcloud').html('');
         pullWordList();
