@@ -89,7 +89,7 @@ const reqMessages = (slackChannelId, time, cb) => {
 
 	console.log('Getting messages from ' + (time ? JSON.stringify(time) : 'the beginning'));
 
-	let connString = `https://slack.com/api/groups.history?token=${token}&channel=${slackChannelId}`;
+	let connString = `https://slack.com/api/conversations.history?token=${token}&channel=${slackChannelId}`;
 	if(time && time.latest) {
 		connString += `&latest=${time.latest}`;
 	} else if (time && time.oldest) {
@@ -112,6 +112,11 @@ const reqMessages = (slackChannelId, time, cb) => {
 
 			let channelHistory = JSON.parse(resp.body);
 			let messagesProcessed = 0;
+			if(channelHistory.messages.length === 0) {
+				if(cb) { cb(''); }
+				return;
+			}
+
 			channelHistory.messages.forEach((message) => {
 				let user = '';
 				if(message.subtype === 'bot_message') {
@@ -216,7 +221,7 @@ const getChannel = (slackChannelId, cb) => {
 };
 
 const reqChannel = (slackChannelId, cb) => {
-	let connString = `https://slack.com/api/groups.info?token=${token}&channel=${slackChannelId}`
+	let connString = `https://slack.com/api/conversations.info?token=${token}&channel=${slackChannelId}`
 
 	req(connString, (err, resp, body) => {
 		if(err) {
@@ -225,7 +230,7 @@ const reqChannel = (slackChannelId, cb) => {
 		}
 
 		let channelInfo = JSON.parse(resp.body);
-		db.Channel.create({slack_id: channelInfo.group.id, name: channelInfo.group.name}, (err, channel) => {
+		db.Channel.create({slack_id: channelInfo.channel.id, name: channelInfo.channel.name}, (err, channel) => {
 			if(err) {
 				if(cb) { cb(err); }
 				return;
