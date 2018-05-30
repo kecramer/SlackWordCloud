@@ -1,9 +1,9 @@
 const db = require('../model'),
       countWords = require('count-words'),
-      slackWorker = require('../worker/slack.js');
+      slack = require('../worker/slack.js');
 
 const show = (req, res) => {
-	slackWorker.getAllChannelMessagesWithDetails(req.params.id, () => {
+	slack.getMessages(req.params.id, () => {
 		db.Channel.find({slack_id: req.params.id}, (err, channel) => {
 			if(err) {
 				console.log(err);
