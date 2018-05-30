@@ -85,19 +85,29 @@ $(document).ready(() => {
           success: (response) => {
               let username = response[0].name;
               // HTML Template
-              const htmlToAppend = (`
-                  <div class="result">
+              let htmlToAppend = (`
+                  <div id="${message._id}" class="result">
                       <h4>${message.timestamp}</h4>
                       <h3>${username}</h3>
                       <p>${message.text}</p>
+                      <a href="#"><h5>Save</h5></a>
                   </div>
                   `);
+
               // Append each message
               $('#results').append(htmlToAppend);
+
+              // Add onclick for saving messages
+              // console.log($('#results .result:last-child').html());
+              $('#results .result:last-child').on('click', 'a>h5', (event) => {
+                  event.preventDefault();
+                  console.log("clicked to save message");
+                  // let messageId = event.target.parent().attr('id');
+
+              })
           },
-          error: handleError,
-          }
-        );
+          error: handleError
+        });
     }
 
     renderAllMessages = (messages) => {
