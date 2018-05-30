@@ -85,10 +85,9 @@ $(document).ready(() => {
           success: (response) => {
               let username = response[0].name;
               let messageId = message._id;
-              let idOrDataId = 'id="';
               // HTML Template
               let htmlToAppend = (`
-                  <div ${idOrDataId}${messageId}" class="result">
+                  <div data-msg-id="${messageId}" class="result">
                       <h4>${message.timestamp}</h4>
                       <h3>${username}</h3>
                       <p>${message.text}</p>
@@ -116,10 +115,10 @@ $(document).ready(() => {
                   });
 
                   // Add message to saved tab
-                  idOrDataId = 'dataId="';
-
                   $('#savedmessages').append(htmlToAppend);
-                  $('#savedmessages:last-child').on('click', 'a>h5', (event) => {
+                  let newlySaved = $('#savedmessages:last-child');
+                  // newlySaved.innerText = 'Unsave';
+                  newlySaved.on('click', 'a>h5', (event) => {
                       event.preventDefault();
                       console.log("clicked to unsave message");
                   })
