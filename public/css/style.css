@@ -103,8 +103,10 @@ div.listcontainer {
 
 div.result {
     background-color: #eee;
-    border-radius: 5px;
+	 border: 1px solid black;
+    border-radius: 10px;
     margin: 1em;
+	 padding: 2em;
 }
 
 div#savedmessages {
@@ -169,3 +171,16 @@ div.jqcloud {
 }
 
 div.jqcloud span { padding: 0; }
+
+code:before {
+	content: ' ';
+	display: block;
+}
+
+code {
+	white-space: pre;
+}
+
+.slack-user, .result a {
+	font-size: 1em;
+}

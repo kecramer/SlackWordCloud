@@ -61,7 +61,7 @@ $(document).ready(() => {
     })
 
     pullWordList();
-    
+
     // update channel when dropdown selection is made
     $('select').on('change', () => {
         // Clear previous results
@@ -84,12 +84,13 @@ $(document).ready(() => {
           url: `/users?q=` + message.user,
           success: (response) => {
               let username = response[0].name;
+              let datetime = new Date(message.timestamp);
               // HTML Template
               let htmlToAppend = (`
                   <div id="${message._id}" class="result">
-                      <h4>${message.timestamp}</h4>
+                      <h4 title="${datetime.toLocaleTimeString()}">${datetime.toLocaleDateString()}</h4>
                       <h3>${username}</h3>
-                      <p>${message.text}</p>
+                      <p>${slackdown.parse(message.text)}</p>
                       <a href="#"><h5>Save</h5></a>
                   </div>
                   `);
@@ -135,7 +136,7 @@ $(document).ready(() => {
                 renderAllMessages(messages);
             },
             error: handleError,
-        })    
+        })
     });
 
     // OnClick for navbar
@@ -153,4 +154,3 @@ $(document).ready(() => {
     });
 
 });
-
