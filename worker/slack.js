@@ -2,207 +2,248 @@ var token = process.env.SLACK_TOKEN || null;
 
 if (token === null) {
 	console.log('Must have SLACK_TOKEN defined in your environment.\n' +
-	            'Do this by adding `export SLACK_TOKEN=token` in your ~/.profile');
+               'Do this by adding `export SLACK_TOKEN=token` in your ~/.profile');
 	process.exit(1);
 }
 
 var req = require('request'),
-    db = require('../model');
+	 db = require('../model');
 
 var channelLookupTable = {},
     userLookupTable = {};
 
-const getMessages = (slackChannelId, internalChannelId, ts, cb) => {
-	if(!slackChannelId) {
-		console.log('Someone asked to get messages without specifying a channel!');
+const getUser = (userId, cb) => {
+	let search = {slack_id: userId};
+	if(userId.length === 24) {
+		//We were given a mongo id
+		search = {_id: userId};
+	} else if(userLookupTable[userId]){
+		if(cb) { cb('', userLookupTable[userId]); }
 		return;
 	}
 
-	console.log('Getting messages starting at ' + (ts ? JSON.stringify(ts) : 'the beginning'));
-
-	let connString = `https://slack.com/api/groups.history?token=${token}&channel=${slackChannelId}`;
-	if(ts && ts.latest) {
-		connString += `&latest=${ts.latest}`;
-	} else if (ts && ts.oldest) {
-		connString += `&oldest=${ts.oldest}`;
-	}
-
-	req(connString, (err, resp, body) => {
+	db.User.findOne(search, (err, user) => {
 		if(err) {
-			console.log(err);
+			if(cb) { cb(`There was an error finding ${JSON.stringify(search)}` + err); }
 			return;
 		}
 
-		var channelHistory = JSON.parse(resp.body);
-		channelHistory.messages.forEach((message) => {
-			let user = '';
-			if(message.subtype === 'bot_message') {
-				return;
-			} else if(message.subtype === 'file_comment') {
-				user = message.file.user;
-			} else {
-				user = message.user;
+		if(user) {
+			userLookupTable[user.slack_id] = user;
+			if(cb) { cb('', user); }
+		} else if(userId.length != 24) {
+			reqUser(userId, (err, user) => {
+				if(err) {
+					if(cb) { cb(err); }
+				}
+				if(cb) { cb('', user); }
+			});
+		}
+	});
+};
+
+const reqUser = (userId, cb) => {
+	let connString = `https://slack.com/api/users.info?token=${token}&user=${userId}`;
+	req(connString, (err, resp, body) => {
+		if(err) {
+			if(cb) { cb(err); }
+			return;
+		}
+
+		let userInfo = JSON.parse(resp.body);
+		if(!userInfo.user) {
+			if(cb) { cb(`User ${userId} could not be found`) };
+			return;
+		}
+
+		db.User.findOne({slack_id: userInfo.user.id}, (err, user) => {
+			if(err) {
+				if(cb) { cb(err); }
 			}
 
-			db.Message.create({text: message.text,
-			                   timestamp: new Date(message.ts * 1000),
-			                   channel: internalChannelId,
-			                   user: userLookupTable[user]._id});
+			if(user) {
+				userLookupTable[user.slack_id] = user;
+				if(cb) { cb('', user); }
+			} else {
+				db.User.create({slack_id: userInfo.user.id, name: userInfo.user.real_name, handle: userInfo.user.name}, (err, user) => {
+					if(err) {
+						if(cb) { cb(err); }
+						return;
+					}
+
+					userLookupTable[user.slack_id] = user;
+
+					if(cb) { cb('', user); }
+				});
+			}
 		});
 
-		//Recurrsively call for more messages if we have not reached the end of the messages.
-		if(channelHistory.has_more) {
-			//Wait 750ms before hitting the slack API again so we won't get rate limited
-			setTimeout(() => {getMessages(slackChannelId, internalChannelId, {latest: channelHistory.messages[channelHistory.messages.length-1].ts}, cb)}, 750);
-		} else {
-			if (cb) { cb(); }
+	});
+};
+
+const reqMessages = (slackChannelId, time, cb) => {
+	if(!slackChannelId) {
+		if(cb) { cb('Someone asked to get messages without specifying a channel!'); };
+		return;
+	}
+
+	console.log('Getting messages from ' + (time ? JSON.stringify(time) : 'the beginning'));
+
+	let connString = `https://slack.com/api/conversations.history?token=${token}&channel=${slackChannelId}`;
+	if(time && time.latest) {
+		connString += `&latest=${time.latest}`;
+	} else if (time && time.oldest) {
+		connString += `&oldest=${time.oldest}`;
+	}
+
+	getChannel(slackChannelId, (err, channel) => {
+		if(err) {
+			if(cb) { cb(err); }
+			return;
 		}
+
+		let internalChannelId = channel._id;
+
+		req(connString, (err, resp, body) => {
+			if(err) {
+				if(cb) { cb(`An error occured when requesting ${connString}` + err); }
+				return;
+			}
+
+			let channelHistory = JSON.parse(resp.body);
+			let messagesProcessed = 0;
+			if(channelHistory.messages.length === 0) {
+				if(cb) { cb(''); }
+				return;
+			}
+
+			channelHistory.messages.forEach((message) => {
+				let user = '';
+				if(message.subtype === 'bot_message') {
+					messagesProcessed++;
+					return;
+				} else if(message.subtype === 'file_comment') {
+					user = message.file.user;
+				} else {
+					user = message.user;
+				}
+
+				db.Message.create({text: message.text,
+					timestamp: new Date(message.ts * 1000),
+					channel: internalChannelId,
+					user: user,
+				}, (err, message) => {
+					if(++messagesProcessed == (channelHistory.messages.length - 1)) {
+						//Done processing this chunk
+						if(channelHistory.has_more) {
+							//Wait 1500ms before hitting the slack API again so we won't get rate limited
+							setTimeout(() => {reqMessages(slackChannelId, {latest: channelHistory.messages[channelHistory.messages.length-1].ts}, cb)}, 1500);
+						} else {
+							if (cb) { cb(''); }
+						}
+					}
+				});
+			});
+		});
+	});
+};
+
+const getMessages = (slackChannelId, cb) => {
+	if(!slackChannelId) {
+		if(cb) { cb('Must specify a slack channel'); }
+		return;
+	}
+
+	getChannel(slackChannelId, (err, channel) => {
+		if(err) {
+			if(cb) { cb(err); }
+			return;
+		}
+
+		let internalChannelId = channel._id;
+
+		db.Message.find({channel: internalChannelId}, null, {sort: '-timestamp'}, (err, messages) => {
+			if(err) {
+				if(cb) { cb('146' + err); }
+				return;
+			}
+
+			let timeGuard = {};
+			if(messages.length > 0) {
+				timeGuard.oldest = new Date(messages[0].timestamp).getTime() / 1000 + 1;
+			}
+
+			reqMessages(slackChannelId, timeGuard, (err) => {
+				if(err) {
+					if(cb) { cb('157' + err); }
+					return;
+				}
+
+				db.Message.find({channel: internalChannelId}, null, {sort: '-timestamp'}, (err, messages) => {
+					if(err) {
+						if(cb) { cb('163' + err); }
+						return;
+					}
+
+					if(cb) { cb('', messages); }
+				});
+			});
+		});
 	});
 };
 
 const getChannel = (slackChannelId, cb) => {
-	if(!slackChannelId) {
-		console.log('Someone asked to get channel details without specifying a channel!');
+	if (channelLookupTable[slackChannelId]) {
+		if(cb) { cb('', channelLookupTable[slackChannelId]); }
 		return;
 	}
 
-	console.log('Getting channel details for ' + slackChannelId);
+	db.Channel.findOne({slack_id: slackChannelId}, (err, channel) => {
+		if(err) {
+			if(cb) { cb(err); }
+			return;
+		}
 
-	if(channelLookupTable[slackChannelId] === undefined) {
-		let connString = `https://slack.com/api/groups.info?token=${token}&channel=${slackChannelId}`
+		if(channel) {
+			if(cb) { cb('', channel); }
+			return;
+		}
 
-		req(connString, (err, resp, body) => {
+		reqChannel(slackChannelId, (err, channel) => {
 			if(err) {
-				console.log(err);
+				if(cb) { cb(err); }
 				return;
 			}
 
-			let channelInfo = JSON.parse(resp.body);
-			db.Channel.find({slack_id: channelInfo.group.id}, (err, channel) => {
-				if(err) {
-					console.log(err);
-					return;
-				}
-
-				if(channel.length === 0) {
-					db.Channel.create({slack_id: channelInfo.group.id, name: channelInfo.group.name, member_ids: channelInfo.group.members}, (err, channel) => {
-						if(err) {
-							console.log(err);
-							return;
-						}
-						channelLookupTable[channel.slack_id] = channel;
-						if(cb) { cb(channelLookupTable[slackChannelId]); }
-					});
-				} else {
-					console.log('Already have details for ' + channelInfo.group.id);
-					channelLookupTable[channel[0].slack_id] = channel[0];
-					if(cb) { cb(channelLookupTable[slackChannelId]); }
-				}
-			});
-		});
-	} else {
-		if(cb) { cb(channelLookupTable[slackChannelId]); }
-	}
-};
-
-const getUser = (slackUserId, cb) => {
-	if(!slackUserId) {
-		console.log('Someone asked to get user details without specifying a user!');
-		return;
-	}
-
-	console.log('Getting user details for ' + slackUserId);
-
-	if(userLookupTable[slackUserId] === undefined) {
-		let connString = `https://slack.com/api/users.info?token=${token}&user=${slackUserId}`;
-
-		req(connString, (err, resp, body) => {
-			if(err) {
-				console.log(err);
-				return;
-			}
-
-			let userInfo = JSON.parse(resp.body);
-			if(!userInfo.user) {
-				console.log('That user was not found or not available to inspect!');
-				return;
-			}
-
-			db.User.find({slack_id: slackUserId}, (err, user) => {
-				if(err) {
-					console.log(err);
-					return;
-				}
-
-				if(user.length === 0) {
-					db.User.create({slack_id: userInfo.user.id, name: userInfo.user.real_name, handle: userInfo.user.name}, (err, user) => {
-						if(err) {
-							console.log(err);
-							return;
-						}
-
-						userLookupTable[user.slack_id] = user;
-						if(cb) { cb(userLookupTable[slackUserId]); }
-					})
-				} else {
-					userLookupTable[user[0].slack_id] = user[0];
-					if(cb) { cb(userLookupTable[slackUserId]); }
-				}
-			})
-		});
-	} else {
-		if(cb) { cb(userLookupTable[slackUserId]); }
-	}
-};
-
-const getUsers = (slackUserIdArray, cb) => {
-	if(!slackUserIdArray) {
-		console.log('Someone asked to get users details without specifying a list of users!');
-		return;
-	}
-
-	if(slackUserIdArray.length === 0) {
-		if(cb) { cb([]); }
-	}
-
-	let counter = slackUserIdArray.length;
-	let userData = [];
-
-	slackUserIdArray.forEach((slackUserId) => {
-		getUser(slackUserId, (user) => {
-			userData.push(user);
-			if(--counter === 0) {
-				if(cb) { cb(userData); }
-			}
+			if(cb) { cb('', channel); }
 		});
 	});
-}
+};
 
-const getAllChannelMessagesWithDetails = (slackChannelId, cb) => {
-	if(!slackChannelId) {
-		console.log('Must specify a channel!');
-		return;
-	}
+const reqChannel = (slackChannelId, cb) => {
+	let connString = `https://slack.com/api/conversations.info?token=${token}&channel=${slackChannelId}`
 
-	getChannel(slackChannelId, (chan) => {
-		getUsers(chan.member_ids, () => {
-			db.Message.find({channel: chan._id}, null, {sort: '-timestamp'}, (err, messages) => {
-				if (messages.length === 0) {
-					getMessages(chan.slack_id, chan._id, null, () => {
-						if(cb) { cb(); }
-					});
-				} else {
-					date = new Date(messages[0].timestamp);
-					getMessages(chan.slack_id, chan._id, {oldest: ((date.getTime() / 1000) + 1)}, () => {
-						if(cb) { cb(); }
-					})
-				}
-			});
+	req(connString, (err, resp, body) => {
+		if(err) {
+			if(cb) { cb(err); }
+			return;
+		}
+
+		let channelInfo = JSON.parse(resp.body);
+		db.Channel.create({slack_id: channelInfo.channel.id, name: channelInfo.channel.name}, (err, channel) => {
+			if(err) {
+				if(cb) { cb(err); }
+				return;
+			}
+
+			channelLookupTable[channel.slack_id] = channel;
+			if(cb) { cb('', channel); }
 		});
 	});
-}
+};
 
 module.exports = {
-	getAllChannelMessagesWithDetails,
-	getUsers
+	getChannel,
+	getUser,
+	getMessages,
 }
