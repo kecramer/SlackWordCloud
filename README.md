@@ -7,33 +7,36 @@
 ## Technologies Used
 
 *What technologies did you use to develop this project? (bullet points)*
--Express
--JQuery
--Node.js
--JQCloud
--insQ
--Slackdown
--RabbitMQ
--Socket.io
--Count-Words
--Slack API
+
+*Express
+*JQuery
+*Node.js
+*JQCloud
+*insQ
+*Slackdown
+*RabbitMQ
+*Socket.io
+*Count-Words
+*Slack API
 
 
 ## Existing Features
 
 *What features does your app have? (bullet points)*
--Retrieve a list of channels
--Generate a word cloud for the selected channel
--View messages that contain a word selected from the word cloud
--Save and unsave messages to a separate tab
+
+*Retrieve a list of channels
+*Generate a word cloud for the selected channel
+*View messages that contain a word selected from the word cloud
+*Save and unsave messages to a separate tab
 
 
 ## Planned Features
 
 *What changes would you make to your project if you continue to work on it? (bullet points)*
--Persist saved messages
--Allow for other Slack users/workspaces
--Responsibly consume the Slack API
+
+*Persist saved messages
+*Allow for other Slack users/workspaces
+*Responsibly consume the Slack API
 
 ---
 
