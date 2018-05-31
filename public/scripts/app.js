@@ -10,7 +10,7 @@ $(document).ready(() => {
     console.log('app.js loaded!');
 
     handleError = (err) => {
-
+    	console.log('There has been an error: ', err);
     }
 
     // Generate Word Cloud
