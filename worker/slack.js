@@ -7,7 +7,30 @@ if (token === null) {
 }
 
 var req = require('request'),
-	 db = require('../model');
+    db = require('../model'),
+    amqp = require('amqplib/callback_api');
+const express = require('express');
+const app = express();
+const server = require('http').Server(app);
+const sender = require('socket.io')(server);
+
+server.listen(8000);
+
+const listener = require("socket.io-client")('http://localhost:8000');
+
+let sendSocket = null;
+sender.on('connection', function(socket) {
+	sendSocket = socket;
+});
+
+let queueChannel = null;
+amqp.connect(process.env.RABBITMQ_BIGWIG_TX_URL || 'amqp://localhost', function(err, conn) {
+	conn.createChannel(function(err, ch) {
+		ch.assertQueue('user', {durable: false});
+		ch.prefetch(1);
+		queueChannel = ch;
+	}, {noAck: false});
+});
 
 var channelLookupTable = {},
     userLookupTable = {};
@@ -32,12 +55,10 @@ const getUser = (userId, cb) => {
 			userLookupTable[user.slack_id] = user;
 			if(cb) { cb('', user); }
 		} else if(userId.length != 24) {
-			reqUser(userId, (err, user) => {
-				if(err) {
-					if(cb) { cb(err); }
-				}
-				if(cb) { cb('', user); }
+			listener.on(userId, (data) => {
+				if(cb) { cb('', data); }
 			});
+			queueChannel.sendToQueue('user', Buffer.from(userId));
 		}
 	});
 };
@@ -46,9 +67,12 @@ const reqUser = (userId, cb) => {
 	let connString = `https://slack.com/api/users.info?token=${token}&user=${userId}`;
 	req(connString, (err, resp, body) => {
 		if(err) {
+			console.log(err);
 			if(cb) { cb(err); }
 			return;
 		}
+
+		console.log(`${new Date().getTime()/1000} --- response code: ${resp.statusCode}`);
 
 		let userInfo = JSON.parse(resp.body);
 		if(!userInfo.user) {
@@ -241,6 +265,29 @@ const reqChannel = (slackChannelId, cb) => {
 		});
 	});
 };
+
+amqp.connect(process.env.RABBITMQ_BIGWIG_TX_URL || 'amqp://localhost', function(err, conn) {
+	conn.createChannel(function(err, ch) {
+		ch.assertQueue('user', {durable: false});
+
+		ch.consume('user', function(msg) {
+			let userId = msg.content.toString();
+			//This timeout does not work correctly
+			setTimeout(() => {
+				reqUser(userId, (err, user) => {
+					let userObject = {
+						userId: user.slack_id,
+						_id: user._id,
+						name: user.name,
+						handle: user.handle
+					}
+					sendSocket.emit(userId, userObject);
+					ch.ack(msg);
+				});
+			}, 600);
+		}, {noAck: false});
+	});
+});
 
 module.exports = {
 	getChannel,
