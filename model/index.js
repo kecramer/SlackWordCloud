@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const connectionString = process.env.MONGO || 'mongodb://localhost/slack-cloud';
+const connectionString = process.env.MONGODB_URI || 'mongodb://localhost/slack-cloud';
 
 mongoose.connect(connectionString);
 
