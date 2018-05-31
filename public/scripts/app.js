@@ -101,27 +101,69 @@ $(document).ready(() => {
               // Add onclick for saving messages
               $('#results .result:last-child').on('click', 'a>h5', (event) => {
                   event.preventDefault();
-                  console.log("clicked to save message");
-                  event.target.innerText = 'Unsave';
-                  // POST message to backend
-                  $.ajax({
-                    method: 'POST',
-                    url: `/messages/${messageId}`,
-                    data: `{message: ${messageId}}`,
-                    success: function(message) {
-                      console.log("message saved to database");
-                    },
-                    error: handleError
-                  });
 
-                  // Add message to saved tab
-                  $('#savedmessages').append(htmlToAppend);
-                  let newlySaved = $('#savedmessages:last-child');
-                  // newlySaved.innerText = 'Unsave';
-                  newlySaved.on('click', 'a>h5', (event) => {
-                      event.preventDefault();
-                      console.log("clicked to unsave message");
-                  })
+                  // function to DELETE message from backend
+                  let deleteFromBackEnd = () => {
+                        $.ajax({
+                          method: 'DELETE',
+                          url: `/messages/${messageId}`,
+                          success: function(message) {
+                            console.log("message deleted from saved in database");
+                          },
+                          error: handleError
+                        });
+                        $().remove();
+                  }
+
+                  // function to remove message
+                  let removeMessage = () => {
+                        console.log("clicked to unsave message");
+                        // DELETE message from frontend
+                        savedMessageCopy.remove();
+                        // DELETE message from backend
+                        deleteFromBackEnd()
+                        saveState = 'Save'
+                        wordCloudButton.innerText = saveState;
+                  }
+
+                  // Update Save State
+                  let wordCloudButton = event.target; // not jquery
+                  let saveState = wordCloudButton.innerText;
+                  let wordCloudCopy = $(wordCloudButton).parent().parent(); // jquery
+                  let savedMessageCopy = wordCloudCopy.clone();
+                  if (saveState === 'Save') {
+                    console.log("clicked to save message");
+
+                    // POST message to backend
+                    $.ajax({
+                      method: 'POST',
+                      url: `/messages/${messageId}`,
+                      data: `{message: ${messageId}}`,
+                      success: function(message) {
+                        console.log("message saved to database");
+                      },
+                      error: handleError
+                    });
+
+                    // Add message to saved tab
+                    savedMessageCopy.appendTo('#savedmessages');
+
+                    // Add OnClick to savedMessageCopy for removal
+                    $('#savedmessages:last-child').on('click', 'a>h5', (event) => {
+                        event.preventDefault();
+                        removeMessage();
+                    })
+
+                    saveState = 'Unsave';
+                    wordCloudButton.innerText = saveState;
+                    // console.log(savedMessageCopy.find('h5')[0].innerHTML);
+                    savedMessageCopy.find('h5')[0].innerHTML = saveState;
+                  } else {
+                    console.log("clicked to unsave message");
+                    removeMessage();
+                  }
+                  
+
               })
           },
           error: handleError
