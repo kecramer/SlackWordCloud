@@ -26,6 +26,7 @@
     "express": "^4.16.3",
     "insertion-query": "^1.0.4",
     "mongoose": "^5.1.2",
+    "nodemon": "^1.17.5",
     "request": "^2.87.0"
   }
 }

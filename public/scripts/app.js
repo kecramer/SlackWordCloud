@@ -9,7 +9,7 @@ $(document).ready(() => {
     console.log('app.js loaded!');
 
     handleError = (err) => {
-        console.log('There has been an error: ', err);
+
     }
 
     // Generate Word Cloud
@@ -30,13 +30,13 @@ $(document).ready(() => {
 
     // Populate list of channels in dropdown
     renderChannel = (channel) => {
-      // let username = response[0].name;
-      // HTML Template
-      const htmlToAppend = (`
-          <option value="${channel.slack_id}"${($('#select').html() === '') ? ' selected="selected"' : ''}>${channel.name}</option>
-          `);
-      // Append each message
-      $('#select').append(htmlToAppend);
+        // let username = response[0].name;
+        // HTML Template
+        const htmlToAppend = (`
+            <option value="${channel.slack_id}"${($('#select').html() === '') ? ' selected="selected"' : ''}>${channel.name}</option>
+            `);
+        // Append each message
+        $('#select').append(htmlToAppend);
     }
 
     renderAllChannels = (channels) => {
@@ -44,7 +44,7 @@ $(document).ready(() => {
         $('#select').html('');
         // Add each message
         channels.forEach((channel) => {
-          renderChannel(channel);
+            renderChannel(channel);
         });
     };
 
@@ -80,43 +80,43 @@ $(document).ready(() => {
 
     renderMessage = (message) => {
         $.ajax({
-          method: 'GET',
-          url: `/users?q=` + message.user,
-          success: (response) => {
-              let username = response[0].name ? response[0].name : "A ghost of slack past";
-              let datetime = new Date(message.timestamp);
-              // HTML Template
-              let htmlToAppend = (`
-                  <div id="${message._id}" class="result">
-                      <h4 title="${datetime.toLocaleTimeString()}">${datetime.toLocaleDateString()}</h4>
-                      <h3>${username}</h3>
-                      <p>${slackdown.parse(message.text)}</p>
-                      <a href="#"><h5>Save</h5></a>
-                  </div>
-                  `);
+            method: 'GET',
+            url: `/users?q=` + message.user,
+            success: (response) => {
+                let username = response[0].name ? response[0].name : "A ghost of slack past";
+                let datetime = new Date(message.timestamp);
+                // HTML Template
+                let htmlToAppend = (`
+                    <div id="${message._id}" class="result">
+                        <h4 title="${datetime.toLocaleTimeString()}">${datetime.toLocaleDateString()}</h4>
+                        <h3>${username}</h3>
+                        <p>${slackdown.parse(message.text)}</p>
+                        <a href="#"><h5>Save</h5></a>
+                    </div>
+                    `);
 
-              // Append each message
-              $('#results').append(htmlToAppend);
+                // Append message
+                $('#results').append(htmlToAppend);
 
-              // Add onclick for saving messages
-              $('#results .result:last-child').on('click', 'a>h5', (event) => {
-                  event.preventDefault();
+                // Add onclick for saving messages
+                $('#results .result:last-child').on('click', 'a>h5', (event) => {
+                    event.preventDefault();
 
-                  // function to DELETE message from backend
-                  let deleteFromBackEnd = () => {
+                    // function to DELETE message from backend
+                    let deleteFromBackEnd = () => {
                         $.ajax({
-                          method: 'DELETE',
-                          url: `/messages/${message._id}`,
-                          success: function(message) {
-                            console.log("message deleted from saved in database");
-                          },
-                          error: handleError
+                            method: 'DELETE',
+                            url: `/messages/${message._id}`,
+                            success: function(message) {
+                                console.log("message deleted from saved in database");
+                            },
+                            error: handleError
                         });
                         $().remove();
-                  }
+                    }
 
-                  // function to remove message
-                  let removeMessage = () => {
+                    // function to remove message
+                    let removeMessage = () => {
                         console.log("clicked to unsave message");
                         // DELETE message from frontend
                         savedMessageCopy.remove();
@@ -124,49 +124,49 @@ $(document).ready(() => {
                         deleteFromBackEnd()
                         saveState = 'Save'
                         wordCloudButton.innerText = saveState;
-                  }
+                    }
 
-                  // Update Save State
-                  let wordCloudButton = event.target; // not jquery
-                  let saveState = wordCloudButton.innerText;
-                  let wordCloudCopy = $(wordCloudButton).parent().parent(); // jquery
-                  let savedMessageCopy = wordCloudCopy.clone();
-                  if (saveState === 'Save') {
-                    console.log("clicked to save message");
+                    // Update Save State
+                    let wordCloudButton = event.target; // not jquery
+                    let saveState = wordCloudButton.innerText;
+                    let wordCloudCopy = $(wordCloudButton).parent().parent(); // jquery
+                    let savedMessageCopy = wordCloudCopy.clone();
+                    if (saveState === 'Save') {
+					console.log("clicked to save message");
 
-                    // POST message to backend
-                    $.ajax({
-                      method: 'POST',
-                      url: `/messages/${message._id}`,
-                      data: `{message: ${message._id}}`,
-                      success: function(message) {
-                        console.log("message saved to database");
-                      },
-                      error: handleError
-                    });
+					// POST message to backend
+					$.ajax({
+					    method: 'POST',
+					    url: `/messages/${message._id}`,
+					    data: `{message: ${message._id}}`,
+					    success: function(message) {
+					        console.log("message saved to database");
+					    },
+					    error: handleError
+					});
 
-                    // Add message to saved tab
-                    savedMessageCopy.appendTo('#savedmessages');
+					// Add message to saved tab
+					savedMessageCopy.appendTo('#savedmessages');
 
-                    // Add OnClick to savedMessageCopy for removal
-                    $('#savedmessages:last-child').on('click', 'a>h5', (event) => {
-                        event.preventDefault();
+					// Add OnClick to savedMessageCopy for removal
+					$('#savedmessages:last-child').on('click', 'a>h5', (event) => {
+				        event.preventDefault();
+				        removeMessage();
+					})
+
+					saveState = 'Unsave';
+					wordCloudButton.innerText = saveState;
+					// console.log(savedMessageCopy.find('h5')[0].innerHTML);
+					savedMessageCopy.find('h5')[0].innerHTML = saveState;
+                    } else {
+                        console.log("clicked to unsave message");
                         removeMessage();
-                    })
+                    }
+                        
 
-                    saveState = 'Unsave';
-                    wordCloudButton.innerText = saveState;
-                    // console.log(savedMessageCopy.find('h5')[0].innerHTML);
-                    savedMessageCopy.find('h5')[0].innerHTML = saveState;
-                  } else {
-                    console.log("clicked to unsave message");
-                    removeMessage();
-                  }
-                  
-
-              })
-          },
-          error: handleError
+                })
+            },
+            error: handleError
         });
     }
 
@@ -175,24 +175,25 @@ $(document).ready(() => {
         $('#results').html('');
         // Add each message
         messages.forEach((message) => {
-          renderMessage(message);
+            renderMessage(message);
         });
     };
 
-   insertionQ('.slack-user').every((el) => {
-      $.ajax({
-         method: 'GET',
-         url: '/users?q=U' + el.innerText,
-         success: (res) => {
-            el.innerText = `@${res[0].handle}`;
-         }
-      });
-   });
+     insertionQ('.slack-user').every((el) => {
+        if(el.innerText.indexOf('@') > -1)
+            {
+                return;
+            }
+        $.ajax({
+            method: 'GET',
+            url: '/users?q=U' + el.innerText,
+            success: (res) => {
+                el.innerText = `@${res[0].handle}`;
+            }
+        });
+     });
 
     // OnClick for each word in word cloud
-
-    // let word_elements = $('span');
-    // console.log(word_elements);
     $('#wordcloud').on('click', 'span', (event) => {
         console.log("clicked " + event.target.innerText);
         $.ajax({
@@ -214,11 +215,11 @@ $(document).ready(() => {
         let element = event.target;
         console.log("clicked " + element.innerText);
         if (element.className === 'savedmessages') {
-          $('main#words').addClass('hidden');
-          $('main#saved').removeClass('hidden');
+            $('main#words').addClass('hidden');
+            $('main#saved').removeClass('hidden');
         } else {
-          $('main#saved').addClass('hidden');
-          $('main#words').removeClass('hidden');
+            $('main#saved').addClass('hidden');
+            $('main#words').removeClass('hidden');
         }
     });
 
