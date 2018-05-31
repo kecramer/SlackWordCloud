@@ -22,10 +22,13 @@
   },
   "homepage": "https://github.com/kecramer/slack-word-cloud#readme",
   "dependencies": {
+    "amqplib": "^0.5.2",
     "count-words": "^1.0.11",
     "express": "^4.16.3",
     "insertion-query": "^1.0.4",
     "mongoose": "^5.1.2",
-    "request": "^2.87.0"
+    "rabbitmq-node": "^0.5.0",
+    "request": "^2.87.0",
+    "socket.io": "^2.1.1"
   }
 }
