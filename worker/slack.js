@@ -36,7 +36,6 @@ var channelLookupTable = {},
     userLookupTable = {};
 
 const getUser = (userId, cb) => {
-	//console.log(`getting user ${userId}`);
 	let search = {slack_id: userId};
 	if(userId.length === 24) {
 		//We were given a mongo id
@@ -47,7 +46,6 @@ const getUser = (userId, cb) => {
 	}
 
 	db.User.findOne(search, (err, user) => {
-		//console.log(`did db search for ${JSON.stringify(search)}, finding ${JSON.stringify(user)}`);
 		if(err) {
 			if(cb) { cb(`There was an error finding ${JSON.stringify(search)}` + err); }
 			return;
@@ -57,9 +55,7 @@ const getUser = (userId, cb) => {
 			userLookupTable[user.slack_id] = user;
 			if(cb) { cb('', user); }
 		} else if(userId.length != 24) {
-			//console.log(`listening on socket for ${userId}`)
 			listener.on(userId, (data) => {
-				//console.log(`received ${data} over the socket for ${userId}`);
 				if(cb) { cb('', data); }
 			});
 			queueChannel.sendToQueue('user', Buffer.from(userId));
@@ -68,7 +64,6 @@ const getUser = (userId, cb) => {
 };
 
 const reqUser = (userId, cb) => {
-	//console.log(`requesting user ${JSON.stringify(userId)} from slack`)
 	let connString = `https://slack.com/api/users.info?token=${token}&user=${userId}`;
 	req(connString, (err, resp, body) => {
 		if(err) {
@@ -276,19 +271,16 @@ amqp.connect(process.env.RABBITMQ_BIGWIG_TX_URL || 'amqp://localhost', function(
 		ch.assertQueue('user', {durable: false});
 
 		ch.consume('user', function(msg) {
-			//console.log(msg);
 			let userId = msg.content.toString();
 			//This timeout does not work correctly
 			setTimeout(() => {
 				reqUser(userId, (err, user) => {
-					//console.log(`Back from req user, receiving ${JSON.stringify(user)}`)
 					let userObject = {
 						userId: user.slack_id,
 						_id: user._id,
 						name: user.name,
 						handle: user.handle
 					}
-					//console.log(`sending user ${JSON.stringify(userObject)} over socket ${userId}`)
 					sendSocket.emit(userId, userObject);
 					ch.ack(msg);
 				});
