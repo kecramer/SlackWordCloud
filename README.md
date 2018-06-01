@@ -19,6 +19,16 @@
 * Count-Words
 * Slack API
 
+This requires you to have mongo and rabbitmq running on your localhost, and the environment variable SLACK_TOKEN set to your slack token (set this by doing `export SLACK_TOKEN=<token>` in your `~/.profile`)! Your slack token requires channels:history, channels:read, groups:history, groups:read, and users:read scopes.
+
+The following commands should get you running:
+
+`npm install`  
+`brew install rabbitmq`  
+`/usr/local/sbin/rabbitmq-server &`  
+`mongod &`  
+`node server.js`  
+
 
 ## Existing Features
 
