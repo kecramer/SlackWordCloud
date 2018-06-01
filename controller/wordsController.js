@@ -38,7 +38,8 @@ const show = (req, res) => {
 				                       .replace(/:[a-zA-Z0-9\-_]+:/g, '')
 				                       .replace(/(and )?commented( on)?/g, '')
 				                       .replace(/image uploaded from [.]+/g, '')
-				                       .replace(/\<https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)[\>|]/g, '');
+				                       .replace(/\<https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)[\>|]/g, '')
+											  .replace(/'/g, '');
 
 				let occurrences = countWords(hugeString, true);
 
