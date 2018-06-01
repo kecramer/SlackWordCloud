@@ -228,9 +228,13 @@ $(document).ready(() => {
         if (element.className === 'savedmessages') {
             $('main#words').addClass('hidden');
             $('main#saved').removeClass('hidden');
+            $('.wordcloud').removeClass('tab');
+            $('.savedmessages').addClass('tab');
         } else {
             $('main#saved').addClass('hidden');
             $('main#words').removeClass('hidden');
+            $('.savedmessages').removeClass('tab');
+            $('.wordcloud').addClass('tab');
         }
     });
 
